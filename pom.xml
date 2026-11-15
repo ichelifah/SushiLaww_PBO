@@ -7,21 +7,25 @@
     <artifactId>sushilaww</artifactId>
     <version>1.0-SNAPSHOT</version>
     <properties>
-        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.release>21</maven.compiler.release>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <javafx.version>21.0.9</javafx.version>
     </properties>
+    <dependencies>
+    <dependency>
+        <groupId>org.openjfx</groupId>
+        <artifactId>javafx-controls</artifactId>
+        <version>${javafx.version}</version>
+    </dependency>
+</dependencies>
     <build>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-jar-plugin</artifactId>
-                <version>3.4.2</version>
+                <groupId>org.openjfx</groupId>
+                <artifactId>javafx-maven-plugin</artifactId>
+                <version>0.0.8</version>
                 <configuration>
-                    <archive>
-                        <manifest>
-                            <mainClass>com.mycompany.sushilaww.Main</mainClass>
-                        </manifest>
-                    </archive>
+                            <mainClass>com.mycompany.sushilaww.SushiLawwApp</mainClass>
                 </configuration>
             </plugin>
         </plugins>
