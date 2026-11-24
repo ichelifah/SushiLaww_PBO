@@ -1,7 +1,9 @@
 package com.mycompany.sushilaww;
 
+import java.io.Serializable;
+
 // Satu baris pesanan: menu apa dan berapa porsi
-public class DetailTransaksi {
+public class DetailTransaksi implements Serializable {
     private Menu menu;
     private int jumlah;
 

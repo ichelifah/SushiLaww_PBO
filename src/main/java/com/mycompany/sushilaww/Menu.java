@@ -1,16 +1,16 @@
 package com.mycompany.sushilaww;
 
+import java.util.ArrayList;
+
 // SUBCLASS dari Produk (Pert. 6)
 public class Menu extends Produk {
     private double harga;
-    private BahanBaku bahan;        // bahan baku utama menu ini
-    private double bahanPerPorsi;   // jumlah bahan yang terpakai tiap 1 porsi
+    // Composition (Pert. 11): ItemResep dibuat di dalam class Menu
+    private ArrayList<ItemResep> resep = new ArrayList<>();
 
-    public Menu(String kode, String nama, double harga, BahanBaku bahan, double bahanPerPorsi) {
+    public Menu(String kode, String nama, double harga) {
         super(kode, nama);
         setHarga(harga);
-        this.bahan = bahan;
-        this.bahanPerPorsi = bahanPerPorsi;
     }
 
     public double getHarga() {
@@ -19,27 +19,49 @@ public class Menu extends Produk {
 
     // Validasi: harga harus lebih dari 0
     public void setHarga(double harga) {
-        if (harga > 0) {
-            this.harga = harga;
-        } else {
-            System.out.println("Harga tidak valid! Diatur ke 10000.");
-            this.harga = 10000;
+        if (harga <= 0) {
+            throw new IllegalArgumentException("Harga harus lebih dari 0!");
         }
+        this.harga = harga;
     }
 
-    public BahanBaku getBahan() {
-        return this.bahan;
+    public void tambahBahan(BahanBaku bahan, double takaranPerPorsi) {
+        resep.add(new ItemResep(bahan, takaranPerPorsi));
     }
 
-    public double getBahanPerPorsi() {
-        return this.bahanPerPorsi;
+    public ArrayList<ItemResep> getResep() {
+        return this.resep;
+    }
+
+    // Cek apakah bahan ini dipakai di resep menu
+    public boolean memakaiBahan(BahanBaku bahan) {
+        for (ItemResep item : resep) {
+            if (item.getBahan() == bahan) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public String getTeksResep() {
+        String teks = "";
+        for (int i = 0; i < resep.size(); i++) {
+            teks = teks + resep.get(i).toString();
+            if (i < resep.size() - 1) {
+                teks = teks + ", ";
+            }
+        }
+        return teks;
+    }
+
+    @Override
+    public String getJenis() {
+        return "Menu";
     }
 
     // Method Overriding
     @Override
-    public void tampilkanInfo() {
-        super.tampilkanInfo();
-        System.out.printf(" | Rp %,.0f | Bahan: %s (%.0f %s/porsi)%n",
-                harga, bahan.getNama(), bahanPerPorsi, bahan.getSatuan());
+    public String getInfo() {
+        return super.getInfo() + String.format(" | Rp %,.0f | Resep: %s", harga, getTeksResep());
     }
 }

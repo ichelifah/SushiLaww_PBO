@@ -1,30 +1,19 @@
 package com.mycompany.sushilaww;
 
-import java.time.LocalDate;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Scanner;
 
+// Versi console SushiLaww (versi GUI ada di SushiLawwApp)
 public class Main {
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
-        // Object Instantiation (Pert. 3): bahan baku awal
-        BahanBaku nasi = new BahanBaku("B01", "Nasi Sushi", "gram", 5000);
-        BahanBaku salmon = new BahanBaku("B02", "Salmon", "gram", 1500);
-        BahanBaku tuna = new BahanBaku("B03", "Tuna", "gram", 1200);
+        // Data sama dengan versi GUI
+        SushiLawwData.inisialisasi();
+        ArrayList<BahanBaku> daftarBahan = SushiLawwData.daftarBahan;
+        ArrayList<Menu> daftarMenu = SushiLawwData.daftarMenu;
 
-        ArrayList<BahanBaku> daftarBahan = new ArrayList<>();
-        daftarBahan.add(nasi);
-        daftarBahan.add(salmon);
-        daftarBahan.add(tuna);
-
-        // Menu awal
-        ArrayList<Menu> daftarMenu = new ArrayList<>();
-        daftarMenu.add(new Menu("M01", "Salmon Roll", 35000, salmon, 80));
-        daftarMenu.add(new Menu("M02", "Tuna Roll", 32000, tuna, 80));
-        daftarMenu.add(new Menu("M03", "Nasi Sushi Polos", 12000, nasi, 150));
-
-        LaporanPenjualan laporan = new LaporanPenjualan();
         boolean isRunning = true;
 
         System.out.println("========================================");
@@ -68,24 +57,32 @@ public class Main {
                     int idxBahan = bacaAngka(scanner) - 1;
                     if (idxBahan >= 0 && idxBahan < daftarBahan.size()) {
                         System.out.print("Jumlah yang ditambah: ");
-                        double tambah = bacaAngka(scanner);
-                        daftarBahan.get(idxBahan).tambahStok(tambah);
-                        System.out.println("Stok " + daftarBahan.get(idxBahan).getNama()
-                                + " sekarang: " + daftarBahan.get(idxBahan).getJumlahStok());
+                        try {
+                            double tambah = Double.parseDouble(scanner.nextLine().trim());
+                            daftarBahan.get(idxBahan).tambahStok(tambah);
+                            System.out.println("Stok " + daftarBahan.get(idxBahan).getNama()
+                                    + " sekarang: " + daftarBahan.get(idxBahan).getJumlahStok());
+                            simpan();
+                        } catch (NumberFormatException e) {
+                            System.out.println("Jumlah harus angka!");
+                        } catch (IllegalArgumentException e) {
+                            System.out.println(e.getMessage());
+                        }
                     } else {
                         System.out.println("Pilihan bahan tidak valid.");
                     }
                     break;
 
                 case 4:
-                    prosesTransaksi(scanner, daftarMenu, laporan);
+                    prosesTransaksi(scanner, daftarMenu);
                     break;
 
                 case 5:
-                    laporan.tampilkanLaporan();
+                    SushiLawwData.laporan.tampilkanLaporan();
                     break;
 
                 case 6:
+                    simpan();
                     System.out.println("Terima kasih telah menggunakan SushiLaww!");
                     isRunning = false;
                     break;
@@ -98,9 +95,8 @@ public class Main {
     }
 
     // Membuat satu transaksi: pilih menu, cek stok, kurangi stok, simpan
-    private static void prosesTransaksi(Scanner scanner, ArrayList<Menu> daftarMenu,
-                                        LaporanPenjualan laporan) {
-        Transaksi transaksi = new Transaksi(LocalDate.now().toString());
+    private static void prosesTransaksi(Scanner scanner, ArrayList<Menu> daftarMenu) {
+        Transaksi transaksi = new Transaksi();
         boolean tambahLagi = true;
 
         while (tambahLagi) {
@@ -124,25 +120,32 @@ public class Main {
                 if (porsi <= 0) {
                     System.out.println("Jumlah porsi harus lebih dari 0.");
                 } else {
-                    // Bahan yang dibutuhkan = bahan per porsi x jumlah porsi
-                    double butuh = menu.getBahanPerPorsi() * porsi;
-                    if (menu.getBahan().kurangiStok(butuh)) {
-                        transaksi.tambahDetail(new DetailTransaksi(menu, porsi));
-                        System.out.println(porsi + " porsi " + menu.getNama() + " ditambahkan.");
-                    } else {
-                        System.out.println("Stok " + menu.getBahan().getNama() + " tidak cukup! Sisa: "
-                                + menu.getBahan().getJumlahStok() + " " + menu.getBahan().getSatuan());
-                    }
+                    transaksi.tambahPesanan(menu, porsi);
+                    System.out.println(porsi + " porsi " + menu.getNama() + " ditambahkan.");
                 }
             }
         }
 
         if (transaksi.getDaftarDetail().isEmpty()) {
             System.out.println("Transaksi dibatalkan (tidak ada pesanan).");
-            Transaksi.totalTransaksi--; // transaksi kosong tidak dihitung
-        } else {
-            laporan.tambahTransaksi(transaksi);
+            return;
+        }
+
+        try {
+            SushiLawwData.kasir.simpanTransaksi(transaksi, SushiLawwData.laporan);
             transaksi.cetakStruk();
+            simpan();
+        } catch (StokTidakCukupException e) {
+            System.out.println(e.getMessage());
+            System.out.println("Transaksi tidak disimpan.");
+        }
+    }
+
+    private static void simpan() {
+        try {
+            SushiLawwData.simpanData();
+        } catch (IOException e) {
+            System.out.println("Gagal menyimpan data: " + e.getMessage());
         }
     }
 
